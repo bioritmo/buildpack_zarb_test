@@ -1,14 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-echo "=== DEBUG START ==="
-echo "BUILD_DIR=$1"
-echo "LAYERS_DIR=$2"
-echo "ENV_DIR=$3"
-echo "Current dir: $(pwd)"
-env
-echo "=== DEBUG END ==="
-
 BUILD_DIR=$1
 LAYERS_DIR=$2
 ENV_DIR=$3
