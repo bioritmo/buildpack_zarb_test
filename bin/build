@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+BUILD_DIR=$1
+LAYERS_DIR=$2
+ENV_DIR=$3
+
+SSH_LAYER_DIR="$LAYERS_DIR/ssh-key"
+mkdir -p "$SSH_LAYER_DIR/.ssh"
+chmod 700 "$SSH_LAYER_DIR/.ssh"
+
+if [ -z "${BUILDPACK_SSH_KEY:-}" ]; then
+  echo "Erro: A variável BUILDPACK_SSH_KEY não está definida."
+  exit 1
+fi
+
+echo "$BUILDPACK_SSH_KEY" > "$SSH_LAYER_DIR/.ssh/id_rsa"
+chmod 600 "$SSH_LAYER_DIR/.ssh/id_rsa"
+
+ssh-keyscan github.com >> "$SSH_LAYER_DIR/.ssh/known_hosts"
+
+cat <<EOF_LAYER > "$SSH_LAYER_DIR.env"
+GIT_SSH_COMMAND=ssh -i "$SSH_LAYER_DIR/.ssh/id_rsa" -o StrictHostKeyChecking=no
+EOF_LAYER
+
+cat <<EOF_META > "$SSH_LAYER_DIR.toml"
+[types]
+build = true
+launch = false
+EOF_META

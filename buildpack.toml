@@ -1,0 +1,9 @@
+api = "0.10"
+
+[buildpack]
+id = "com.smartfit.ssh-key"
+version = "0.1.0"
+name = "SSH Key Buildpack"
+
+[[stacks]]
+id = "*"
