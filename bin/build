@@ -1,9 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BUILD_DIR=$1
-LAYERS_DIR=$2
-ENV_DIR=$3
+echo ">> SSH key prefix: ${BUILDPACK_SSH_KEY:0:20}..." >&2
+
+# Parâmetros brutos
+ARG1=${1:-}
+ARG2=${2:-}
+ARG3=${3:-}
+ARG4=${4:-}
+
+# Determina diretório correto de layers
+if [ -n "${CNB_LAYERS_DIR:-}" ]; then
+  LAYERS_DIR="$CNB_LAYERS_DIR"
+elif [ -d "$ARG2/env" ] && [ -d "$ARG3/env" ]; then
+  # legacy: $2=layers, $3=env
+  LAYERS_DIR="$ARG2"
+  ENV_DIR="$ARG3"
+else
+  # new: $2=platform, $3=layers, $4=env
+  LAYERS_DIR="$ARG3"
+  ENV_DIR="$ARG4"
+fi
 
 SSH_LAYER_DIR="$LAYERS_DIR/com.smartfit.ssh-key/ssh-key"
 mkdir -p "$SSH_LAYER_DIR/.ssh"
