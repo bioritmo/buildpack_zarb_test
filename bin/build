@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# DEBUG: prefixo da chave
-echo ">> SSH key prefix: ${BUILDPACK_SSH_KEY:0:20}..." >&2
+echo "===== INÍCIO DO DEBUG DE AMBIENTE =====" >&2
+printenv >&2
+echo "===== FIM DO DEBUG DE AMBIENTE =====" >&2
+
+echo "===== INÍCIO DO DEBUG DE AMBIENTE ENV CNB =====" >&2
+echo ">>> CNB_* vars:" >&2
+printenv | grep -E '^CNB_|^PLATFORM_' | sort >&2
+echo "===== FIM DO DEBUG DE AMBIENTE ENV CNB =====" >&2
 
 # Captura possíveis argumentos legacy ou modernos
 ARG1=${1:-}; ARG2=${2:-}; ARG3=${3:-}; ARG4=${4:-}
