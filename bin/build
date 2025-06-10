@@ -34,12 +34,12 @@ chmod 600 "$SSH_LAYER_DIR/.ssh/id_rsa"
 # 4) Popula o known_hosts para GitHub
 ssh-keyscan github.com >> "$SSH_LAYER_DIR/.ssh/known_hosts"
 
-# 5) Gera o arquivo de env da layer (disponível para próximos buildpacks)
+# 5) Gera o arquivo de env da layer
 cat <<EOF > "$LAYERS_DIR/com.smartfit.ssh-key.env"
 GIT_SSH_COMMAND="ssh -i $SSH_LAYER_DIR/.ssh/id_rsa -o StrictHostKeyChecking=no"
 EOF
 
-# 6) Gera o metadata TOML da layer para o CNB lifecycle
+# 6) Gera o metadata TOML da layer
 cat <<EOF > "$LAYERS_DIR/com.smartfit.ssh-key.toml"
 [types]
 build = true
