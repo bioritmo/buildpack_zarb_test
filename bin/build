@@ -1,47 +1,46 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# DEBUG: prefixo da chave
 echo ">> SSH key prefix: ${BUILDPACK_SSH_KEY:0:20}..." >&2
 
-# Parâmetros brutos
-ARG1=${1:-}
-ARG2=${2:-}
-ARG3=${3:-}
-ARG4=${4:-}
+# Captura possíveis argumentos legacy ou modernos
+ARG1=${1:-}; ARG2=${2:-}; ARG3=${3:-}; ARG4=${4:-}
 
-# Determina diretório correto de layers
+# Descobre layers_dir de forma genérica
 if [ -n "${CNB_LAYERS_DIR:-}" ]; then
   LAYERS_DIR="$CNB_LAYERS_DIR"
 elif [ -d "$ARG2/env" ] && [ -d "$ARG3/env" ]; then
-  # legacy: $2=layers, $3=env
   LAYERS_DIR="$ARG2"
-  ENV_DIR="$ARG3"
 else
-  # new: $2=platform, $3=layers, $4=env
   LAYERS_DIR="$ARG3"
-  ENV_DIR="$ARG4"
 fi
 
-SSH_LAYER_DIR="$LAYERS_DIR/com.smartfit.ssh-key/ssh-key"
+# Define a layer corretamente (sem subpastas extras)
+SSH_LAYER_DIR="$LAYERS_DIR/com.smartfit.ssh-key"
+
+# Cria pasta .ssh dentro da layer
 mkdir -p "$SSH_LAYER_DIR/.ssh"
 chmod 700 "$SSH_LAYER_DIR/.ssh"
 
-if [ -z "${BUILDPACK_SSH_KEY:-}" ]; then
-  echo "Erro: A variável BUILDPACK_SSH_KEY não está definida."
-  exit 1
-fi
+# Verifica variável de chave
+: "${BUILDPACK_SSH_KEY:?Erro: BUILDPACK_SSH_KEY não definida}"
 
+# Salva a chave e ajusta permissão
 echo "$BUILDPACK_SSH_KEY" > "$SSH_LAYER_DIR/.ssh/id_rsa"
 chmod 600 "$SSH_LAYER_DIR/.ssh/id_rsa"
 
+# Popula known_hosts
 ssh-keyscan github.com >> "$SSH_LAYER_DIR/.ssh/known_hosts"
 
-cat <<EOF_LAYER > "$SSH_LAYER_DIR.env"
+# Gera o arquivo de env no nível da layer
+cat <<EOF > "$LAYERS_DIR/com.smartfit.ssh-key.env"
 GIT_SSH_COMMAND=ssh -i "$SSH_LAYER_DIR/.ssh/id_rsa" -o StrictHostKeyChecking=no
-EOF_LAYER
+EOF
 
-cat <<EOF_META > "$SSH_LAYER_DIR.toml"
+# Gera o metadata no nível da layer
+cat <<EOF > "$LAYERS_DIR/com.smartfit.ssh-key.toml"
 [types]
 build = true
 launch = false
-EOF_META
+EOF
