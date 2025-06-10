@@ -1,41 +1,45 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Captura argumentos (legacy ou moderno)
-ARG1=${1:-}; ARG2=${2:-}; ARG3=${3:-}; ARG4=${4:-}
+# Captura possíveis argumentos legacy ou modernos
+ARG1=${1:-}
+ARG2=${2:-}
+ARG3=${3:-}
+ARG4=${4:-}
 
-# Descobre layers_dir
+# Descobre o diretório de layers
 if [ -n "${CNB_LAYERS_DIR:-}" ]; then
   LAYERS_DIR="$CNB_LAYERS_DIR"
 elif [ -d "$ARG2/env" ] && [ -d "$ARG3/env" ]; then
+  # API v0.5 legacy: $2=layers, $3=env
   LAYERS_DIR="$ARG2"
 else
+  # API ≥0.6: $2=platform, $3=layers, $4=env
   LAYERS_DIR="$ARG3"
 fi
 
-# Define o diretório da layer (sem subpastas extras)
 SSH_LAYER_DIR="$LAYERS_DIR/com.smartfit.ssh-key"
 
-# Cria apenas os diretórios necessários
+# 1) Cria apenas os diretórios necessários
 mkdir -p "$SSH_LAYER_DIR/.ssh"
 chmod 700 "$SSH_LAYER_DIR/.ssh"
 
-# Verifica se a chave foi passada
-: "${BUILDPACK_SSH_KEY:?Erro: BUILDPACK_SSH_KEY não definida}"
+# 2) Garante que a chave foi passada como env var
+: "${BUILDPACK_SSH_KEY:?Erro: variável BUILDPACK_SSH_KEY não definida}"
 
-# Grava a chave privada
+# 3) Grava a chave privada e ajusta permissão
 echo "$BUILDPACK_SSH_KEY" > "$SSH_LAYER_DIR/.ssh/id_rsa"
 chmod 600 "$SSH_LAYER_DIR/.ssh/id_rsa"
 
-# Popula known_hosts
+# 4) Popula o known_hosts para GitHub
 ssh-keyscan github.com >> "$SSH_LAYER_DIR/.ssh/known_hosts"
 
-# Gera o arquivo de env da layer (sem mkdir extra)
+# 5) Gera o arquivo de env da layer (disponível para próximos buildpacks)
 cat <<EOF > "$LAYERS_DIR/com.smartfit.ssh-key.env"
 GIT_SSH_COMMAND="ssh -i $SSH_LAYER_DIR/.ssh/id_rsa -o StrictHostKeyChecking=no"
 EOF
 
-# Gera o metadata TOML da layer
+# 6) Gera o metadata TOML da layer para o CNB lifecycle
 cat <<EOF > "$LAYERS_DIR/com.smartfit.ssh-key.toml"
 [types]
 build = true
