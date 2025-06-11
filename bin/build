@@ -49,6 +49,12 @@ chmod 600 "$SSH_LAYER_DIR/.ssh/id_rsa"
 SSH_KNOWN_HOSTS="${BUILDPACK_SSH_KNOWN_HOSTS:-github.com}"
 log "Configurando hosts conhecidos: $SSH_KNOWN_HOSTS"
 
+# Popula known_hosts
+> "$SSH_LAYER_DIR/.ssh/known_hosts"
+for host in $SSH_KNOWN_HOSTS; do
+  log "Adicionando host conhecido: $host"
+  ssh-keyscan "$host" >> "$SSH_LAYER_DIR/.ssh/known_hosts" 2>/dev/null || true
+done
 
 chmod 644 "$SSH_LAYER_DIR/.ssh/known_hosts"
 
