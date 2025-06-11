@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Logging function
+log() {
+  echo "[SSH Key Buildpack] $*" >&2
+}
+
 # Captura possíveis argumentos legacy ou modernos
 ARG1=${1:-}
 ARG2=${2:-}
@@ -20,29 +25,52 @@ fi
 
 SSH_LAYER_DIR="$LAYERS_DIR/com.smartfit.ssh-key"
 
-# 1) Cria apenas os diretórios necessários
+log "Criando diretório SSH: $SSH_LAYER_DIR/.ssh"
 mkdir -p "$SSH_LAYER_DIR/.ssh"
 chmod 700 "$SSH_LAYER_DIR/.ssh"
 
-# 2) Garante que a chave foi passada como env var
-: "${BUILDPACK_SSH_KEY:?Erro: variável BUILDPACK_SSH_KEY não definida}"
+# Garante que a chave foi passada como env var (double check)
+if [ -z "${BUILDPACK_SSH_KEY:-}" ]; then
+  log "ERRO: variável BUILDPACK_SSH_KEY não definida"
+  exit 1
+fi
 
-# 3) Grava a chave privada e ajusta permissão
+# Valida se a chave SSH parece válida
+if ! echo "$BUILDPACK_SSH_KEY" | grep -q "BEGIN.*PRIVATE KEY"; then
+  log "AVISO: BUILDPACK_SSH_KEY não parece ser uma chave SSH válida"
+fi
+
+# Grava a chave privada e ajusta permissão
+log "Configurando chave SSH privada"
 echo "$BUILDPACK_SSH_KEY" > "$SSH_LAYER_DIR/.ssh/id_rsa"
 chmod 600 "$SSH_LAYER_DIR/.ssh/id_rsa"
 
-# 4) Popula o known_hosts para GitHub
-ssh-keyscan github.com >> "$SSH_LAYER_DIR/.ssh/known_hosts"
+# Configura hosts conhecidos
+SSH_KNOWN_HOSTS="${BUILDPACK_SSH_KNOWN_HOSTS:-github.com}"
+log "Configurando hosts conhecidos: $SSH_KNOWN_HOSTS"
 
-# 5) Gera o arquivo de env da layer
+
+chmod 644 "$SSH_LAYER_DIR/.ssh/known_hosts"
+
+# Configura o comando SSH padrão
+SSH_COMMAND="ssh -i $SSH_LAYER_DIR/.ssh/id_rsa -o StrictHostKeyChecking=no -o UserKnownHostsFile=$SSH_LAYER_DIR/.ssh/known_hosts"
+
+# Gera o arquivo de env da layer
+log "Configurando variáveis de ambiente"
 cat <<EOF > "$LAYERS_DIR/com.smartfit.ssh-key.env"
-GIT_SSH_COMMAND="ssh -i $SSH_LAYER_DIR/.ssh/id_rsa -o StrictHostKeyChecking=no"
+GIT_SSH_COMMAND=$SSH_COMMAND
 EOF
 
-# 6) Gera o metadata TOML da layer
+# Gera o metadata TOML da layer
 cat <<EOF > "$LAYERS_DIR/com.smartfit.ssh-key.toml"
 [types]
 build = true
 launch = false
 cache = false
+
+[metadata]
+version = "0.1.1"
+configured_hosts = "$SSH_KNOWN_HOSTS"
 EOF
+
+log "Configuração de chave SSH concluída com sucesso"
