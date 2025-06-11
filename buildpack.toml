@@ -2,18 +2,11 @@ api = "0.6"
 
 [buildpack]
 id      = "com.smartfit.ssh-key"
-version = "0.1.13"
+version = "0.1.14"
 name    = "SSH Key Buildpack"
 description = "Configura chaves SSH durante o build para acesso a repositórios Git privados"
 homepage = "https://github.com/smartfit/buildpack-ssh-key"
 clear-env = false
 
-
 [[stacks]]
 id = "*"
-
-# Metadata sobre o que o buildpack fornece
-[[order]]
-[[order.group]]
-id = "com.smartfit.ssh-key"
-version = "0.1.13"

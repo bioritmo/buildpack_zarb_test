@@ -75,7 +75,7 @@ launch = false
 cache = false
 
 [metadata]
-version = "0.1.13"
+version = "0.1.14"
 configured_hosts = "$SSH_KNOWN_HOSTS"
 EOF
 
