@@ -6,21 +6,20 @@ log() {
   echo "[SSH Key Buildpack] $*" >&2
 }
 
-# Captura possíveis argumentos legacy ou modernos
-ARG1=${1:-}
-ARG2=${2:-}
-ARG3=${3:-}
-ARG4=${4:-}
+# Captura argumentos CNB
+LAYERS_DIR=${1:-}
+PLATFORM_DIR=${2:-}
+PLAN_PATH=${3:-}
 
-# Descobre o diretório de layers
-if [ -n "${CNB_LAYERS_DIR:-}" ]; then
-  LAYERS_DIR="$CNB_LAYERS_DIR"
-elif [ -d "$ARG2/env" ] && [ -d "$ARG3/env" ]; then
-  # API v0.5 legacy: $2=layers, $3=env
-  LAYERS_DIR="$ARG2"
-else
-  # API ≥0.6: $2=platform, $3=layers, $4=env
-  LAYERS_DIR="$ARG3"
+# Debug: log dos argumentos recebidos
+log "Debug: LAYERS_DIR=$LAYERS_DIR"
+log "Debug: PLATFORM_DIR=$PLATFORM_DIR" 
+log "Debug: PLAN_PATH=$PLAN_PATH"
+
+# Valida se o diretório de layers foi fornecido
+if [ -z "$LAYERS_DIR" ]; then
+  log "ERRO: Diretório de layers não fornecido"
+  exit 1
 fi
 
 SSH_LAYER_DIR="$LAYERS_DIR/com.smartfit.ssh-key"
@@ -75,7 +74,7 @@ launch = false
 cache = false
 
 [metadata]
-version = "0.1.14"
+version = "0.1.15"
 configured_hosts = "$SSH_KNOWN_HOSTS"
 EOF
 

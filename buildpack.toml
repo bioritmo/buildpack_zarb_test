@@ -2,10 +2,10 @@ api = "0.6"
 
 [buildpack]
 id      = "com.smartfit.ssh-key"
-version = "0.1.14"
+version = "0.1.15"
 name    = "SSH Key Buildpack"
 description = "Configura chaves SSH durante o build para acesso a repositórios Git privados"
-homepage = "https://github.com/smartfit/buildpack-ssh-key"
+homepage = "https://github.com/bioritmo/buildpack_zarb_test"
 clear-env = false
 
 [[stacks]]
